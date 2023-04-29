@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import "./styles.css";
 
 const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
-  const [value, setValue] = useState("");
+  const [_value, _setValue] = useState("");
   const textareaRef = useRef(null);
 
-  useEffect(() => {
+  const setValue = useCallback((value) => {
     if (textareaRef.current) {
       textareaRef.current.value = value;
     }
-  }, [value]);
+  });
 
   const handleChange = (event) => {
     const textarea = textareaRef.current;
@@ -30,11 +30,16 @@ const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
     });
     // Join the lines back together with line breaks
     const limitedValue = limitedLines.join("\n");
-    setValue(limitedValue);
 
     // Preserve the cursor position
     const selectionStart = textarea.selectionStart;
     const selectionEnd = textarea.selectionEnd;
+
+    setValue(limitedValue);
+
+    console.log("selectionStart", selectionStart);
+    console.log("selectionEnd", selectionEnd);
+
     const diff = limitedValue.length - oldValue.length;
     let startOfLine = selectionStart;
     while (startOfLine > 0 && limitedValue[startOfLine - 1] !== "\n") {
@@ -42,16 +47,20 @@ const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
     }
     const endOfLine = limitedValue.indexOf("\n", selectionStart);
     if (endOfLine === -1) {
+      textarea.value = limitedValue;
       textarea.selectionStart = selectionStart + diff;
       textarea.selectionEnd = selectionEnd + diff;
     } else if (selectionStart - startOfLine > MAX_CHR_PER_LINE) {
       const cursorOffset = limitedValue.length - oldValue.length;
+      textarea.value = limitedValue;
       textarea.selectionStart = selectionStart + diff - cursorOffset;
       textarea.selectionEnd = selectionEnd + diff - cursorOffset;
+    } else {
+      textarea.value = limitedValue;
     }
   };
 
-  return [value, handleChange, textareaRef];
+  return [_value, handleChange, textareaRef];
 };
 
 // ## 字元超過35要換行
@@ -65,57 +74,9 @@ const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
 // 01234567890123456789012345678901234
 
 export default function App() {
-  // const [textInput, setTextInput] = useState("");
-  // const handleChange = (e) => {
-  //   const maxCharsPerLine = 10;
-  //   const maxLines = 5;
-  //   const textArray = [];
-
-  //   let remainingText = e.target.value;
-  //   let lineCount = 0;
-  //   let lineText = "";
-
-  //   while (remainingText.length > 0 && lineCount < maxLines) {
-  //     let endIndex = maxCharsPerLine;
-  //     if (remainingText.length < maxCharsPerLine) {
-  //       endIndex = remainingText.length;
-  //     } else {
-  //       while (remainingText[endIndex] !== " " && endIndex > 0) {
-  //         endIndex--;
-  //       }
-  //     }
-
-  //     if (endIndex === 0) {
-  //       endIndex = maxCharsPerLine;
-  //     }
-
-  //     lineText = remainingText.substring(0, endIndex);
-  //     textArray.push(lineText);
-  //     remainingText = remainingText.substring(endIndex).trim();
-
-  //     if (remainingText.includes("\n")) {
-  //       lineText = remainingText
-  //         .substring(0, remainingText.indexOf("\n"))
-  //         .trim();
-  //       textArray.push(lineText);
-  //       remainingText = remainingText
-  //         .substring(remainingText.indexOf("\n") + 1)
-  //         .trim();
-  //     }
-
-  //     lineCount++;
-  //   }
-
-  //   const formattedText = textArray.join("\n");
-  //   const dbText = formattedText.replace(/\n/g, "\\n");
-  //   console.log(dbText);
-  //   setTextInput(formattedText);
-  // };
-
-  const MAX_CHR_PER_LINE = 20;
-  const [value, handleChange, textareaRef] = useLimitedTextArea(
-    MAX_CHR_PER_LINE
-  );
+  const MAX_CHR_PER_LINE = 10;
+  const [value, handleChange, textareaRef] =
+    useLimitedTextArea(MAX_CHR_PER_LINE);
 
   return (
     <div className="App">
