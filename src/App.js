@@ -8,12 +8,14 @@ const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
   const setValue = useCallback((value) => {
     if (textareaRef.current) {
       textareaRef.current.value = value;
+      _setValue(value);
     }
   });
 
   const handleChange = (event) => {
     const textarea = textareaRef.current;
-    const oldValue = textarea.value;
+    /** @type {string} */
+    const oldValue = _value;
     let newValue = event.target.value;
     // Split the input value into lines
     const lines = newValue.split("\n");
@@ -26,8 +28,12 @@ const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
       for (let i = 0; i < line.length; i += MAX_CHR_PER_LINE) {
         limitedLine += line.substring(i, i + MAX_CHR_PER_LINE) + "\n";
       }
+      // return limitedLine;
+
       return limitedLine.trim(); // Remove trailing line break
     });
+
+    
     // Join the lines back together with line breaks
     const limitedValue = limitedLines.join("\n");
 
@@ -40,24 +46,76 @@ const useLimitedTextArea = (MAX_CHR_PER_LINE) => {
     console.log("selectionStart", selectionStart);
     console.log("selectionEnd", selectionEnd);
 
-    const diff = limitedValue.length - oldValue.length;
-    let startOfLine = selectionStart;
-    while (startOfLine > 0 && limitedValue[startOfLine - 1] !== "\n") {
-      startOfLine--;
-    }
-    const endOfLine = limitedValue.indexOf("\n", selectionStart);
-    if (endOfLine === -1) {
-      textarea.value = limitedValue;
-      textarea.selectionStart = selectionStart + diff;
-      textarea.selectionEnd = selectionEnd + diff;
-    } else if (selectionStart - startOfLine > MAX_CHR_PER_LINE) {
-      const cursorOffset = limitedValue.length - oldValue.length;
-      textarea.value = limitedValue;
-      textarea.selectionStart = selectionStart + diff - cursorOffset;
-      textarea.selectionEnd = selectionEnd + diff - cursorOffset;
+    console.log("oldValue", JSON.stringify(oldValue));
+
+    let currentLineStart = oldValue.lastIndexOf("\n", selectionStart)
+    if (currentLineStart === -1) {
+      currentLineStart = 0
     } else {
-      textarea.value = limitedValue;
+      currentLineStart += 1
     }
+
+
+    const diff = limitedValue.length - oldValue.length;
+
+    console.log("currentLineStart", currentLineStart);
+
+    
+    const curentLineEnd = limitedValue.indexOf("\n", selectionStart);
+
+    console.log("curentLineEnd", curentLineEnd);
+
+
+    // if (curentLineEnd !== -1) {
+    //   if (diff > 0) {
+    //     // insert at the middle of the text
+    
+    //     // if (selectionStart - currentLineStart > MAX_CHR_PER_LINE) {
+    //     //   console.log('yooooo')
+    //     //   // insert at the end of the line
+    //     //   textarea.selectionStart = selectionStart + diff;
+    //     //   textarea.selectionEnd = selectionEnd + diff;
+    //     // } else {
+    //     //   console.log('heyyyy')
+    //       // insert at the middle of the line
+    //       textarea.selectionStart = selectionStart;
+    //       textarea.selectionEnd = selectionEnd;
+    //     // }
+    //   }  
+    // }
+
+
+    
+
+
+
+
+
+
+    // const characterUsedInCurrentLine = selectionStart - currentLineStart;
+    // const insertedText = event.target.value
+    // const insertLimitLeft = MAX_CHR_PER_LINE - characterUsedInCurrentLine
+    // const insertedTextLeft = insertedText.substring(0, insertLimitLeft)
+
+
+    // const diff = limitedValue.length - oldValue.length;
+    // let startOfLine = selectionStart;
+    // while (startOfLine > 0 && limitedValue[startOfLine - 1] !== "\n") {
+    //   startOfLine--;
+    // }
+    // const endOfLine = limitedValue.indexOf("\n", selectionStart);
+    // if (endOfLine === -1) {
+    //   textarea.value = limitedValue;
+    //   textarea.selectionStart = selectionStart + diff;
+    //   textarea.selectionEnd = selectionEnd + diff;
+    // } else if (selectionStart - startOfLine > MAX_CHR_PER_LINE) {
+    //   const cursorOffset = limitedValue.length - oldValue.length;
+    //   textarea.value = limitedValue;
+    //   textarea.selectionStart = selectionStart + diff - cursorOffset;
+    //   textarea.selectionEnd = selectionEnd + diff - cursorOffset;
+    // } else {
+    //   textarea.value = limitedValue;
+    // }
   };
 
   return [_value, handleChange, textareaRef];
@@ -83,7 +141,7 @@ export default function App() {
       <h1>Hello CodeSandbox</h1>
       <h2>Test Input not allow 10 characters</h2>
       {/* <textarea value={textInput} onChange={(e) => handleChange(e)}></textarea> */}
-      <textarea ref={textareaRef} onChange={handleChange}></textarea>
+      <textarea ref={textareaRef} value={value} onChange={handleChange}></textarea>
     </div>
   );
 }
